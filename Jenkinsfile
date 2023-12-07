@@ -15,7 +15,8 @@ pipeline{
          NEXUSPORT = '8081'
          NEXUS_GRP_REPO = 'vpro-maven-group'
          NEXUS_LOGIN = 'nexuslogin' 
-         
+         SONARSERVER = 'sonarserver'
+         SONARSCANNER = 'sonarscanner'
     }
 
     stages {
@@ -23,11 +24,7 @@ pipeline{
             steps {
                sh 'mvn clean install -U -DskipTests -Dmaven.repo.local=~/.m2/repository'
             }
-        	
-        
-        }
-    
-   post {
+        post {
                 success {
                     echo 'Now Archiving...'
                     archiveArtifacts artifacts: '**/target/*.war'
@@ -40,7 +37,9 @@ pipeline{
                 sh 'mvn clean install -U -DskipTests -Dmaven.repo.local=~/.m2/repository test'
             }
         }    
-stage ('Checkstyle Analysis'){
+
+		
+        stage ('Checkstyle Analysis'){
             steps {
                 sh 'mvn clean install -U -DskipTests -Dmaven.repo.local=~/.m2/repository checkstyle:checkstyle'
             }
@@ -61,15 +60,15 @@ stage ('Checkstyle Analysis'){
                    -Dsonar.junit.reportsPath=target/surefire-reports/ \
                    -Dsonar.jacoco.reportsPath=target/jacoco.exec \
                    -Dsonar.java.checkstyle.reportPaths=target/checkstyle-result.xml'''
-                }
             }
-
-stage ('Quality Gate') {
+          }
+    }
+    stage ('Quality Gate') {
         steps {
             timeout(time: 1, unit: 'HOURS') {
                 waitForQualityGate abortPipeline: true 
             }
         }
-    }            
+    }           
 }
 }
